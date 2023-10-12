@@ -12,7 +12,7 @@ $ python main.py
 ```
 
 ## Demo
-![alt text](https://github.com/hatatwit/hobbyRabbit/blob/master/demo.png?raw=true)
+![alt text](https://github.com/hatatwit/hoppyRabbit/blob/43a033f698f54cedd710fb7f2be786215ad22197/demo.png?raw=true)
 
 ## Build with
 * Python
