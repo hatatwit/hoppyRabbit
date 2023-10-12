@@ -12,7 +12,7 @@ $ python main.py
 ```
 
 ## Demo
-![alt text](https://github.com/hatatwit/firebase-django/blob/master/homePage.png?raw=true)
+![alt text](https://github.com/hatatwit/hobbyRabbit/blob/master/demo.png?raw=true)
 
 ## Build with
 * Python
