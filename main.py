@@ -23,11 +23,15 @@ pygame.display.set_caption("Hoppy Rabbit")
 player_image = pygame.image.load("pet.png")
 player_image = pygame.transform.scale(player_image, (PLAYER_SIZE, PLAYER_SIZE))
 
-food_image = pygame.image.load("food.png")
-food_image = pygame.transform.scale(food_image, (ITEM_RADIUS * 2, ITEM_RADIUS * 2))
+food_images = []
+food_files = ["carrot.png", "hay.png"]
+for food_file in food_files:
+    food_image = pygame.image.load(food_file)
+    food_image = pygame.transform.scale(food_image, (ITEM_RADIUS * 2, ITEM_RADIUS * 2))
+    food_images.append(food_image)
 
 obstacle_images = []
-obstacle_files = ["avocado.png", "chocolate.png"]
+obstacle_files = ["avocado.png", "chocolate.png", "meat.png"]
 for obstacle_file in obstacle_files:
     obstacle_image = pygame.image.load(obstacle_file)
     obstacle_image = pygame.transform.scale(obstacle_image, (OBSTACLE_WIDTH, OBSTACLE_HEIGHT))
@@ -72,7 +76,8 @@ while running:
         obstacles.append([obstacle_x, -OBSTACLE_HEIGHT, obstacle_type])
     if random.randint(1, 100) < 2:
         item_x = random.randint(0, SCREEN_WIDTH - ITEM_RADIUS * 2)
-        items.append([item_x, -ITEM_RADIUS, food_image])
+        item_type = random.choice(food_images)
+        items.append([item_x, -ITEM_RADIUS, item_type])
 
     # Update obstacle and item positions
     for obstacle in obstacles:
