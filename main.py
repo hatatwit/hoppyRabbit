@@ -1,118 +1,122 @@
-# Import packages
 import pygame
 import sys
+import random
 
 # Initialize Pygame
 pygame.init()
 
-# Screen dimensions
+# Constants
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
-
-# Colors
-BLACK = (0, 0, 0)
+PLAYER_SIZE = 50
+PLAYER_SPEED = 5
+OBSTACLE_WIDTH = 50
+OBSTACLE_HEIGHT = 40
+ITEM_RADIUS = 15
 WHITE = (255, 255, 255)
-GREEN = (0, 128, 0)
-
-# Paddle dimensions
-PADDLE_WIDTH = 10
-PADDLE_HEIGHT = 100
-PADDLE_SPEED = 7
-
-# Ball dimensions
-BALL_SIZE = 10
-BALL_SPEED = [5, 5]
 
 # Initialize the screen
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption('Ping Pong Game')
+pygame.display.set_caption("Hoppy Rabbit")
 
-# Paddle class
-class Paddle:
-    def __init__(self, x, y):
-        self.rect = pygame.Rect(x, y, PADDLE_WIDTH, PADDLE_HEIGHT)
+# Load images
+player_image = pygame.image.load("pet.png")
+player_image = pygame.transform.scale(player_image, (PLAYER_SIZE, PLAYER_SIZE))
 
-    def draw(self):
-        pygame.draw.rect(screen, WHITE, self.rect)
+food_image = pygame.image.load("food.png")
+food_image = pygame.transform.scale(food_image, (ITEM_RADIUS * 2, ITEM_RADIUS * 2))
 
-# Ball class
-class Ball:
-    def __init__(self, x, y):
-        self.rect = pygame.Rect(x, y, BALL_SIZE, BALL_SIZE)
-        self.vx = BALL_SPEED[0]
-        self.vy = BALL_SPEED[1]
+obstacle_images = []
+obstacle_files = ["avocado.png", "chocolate.png"]
+for obstacle_file in obstacle_files:
+    obstacle_image = pygame.image.load(obstacle_file)
+    obstacle_image = pygame.transform.scale(obstacle_image, (OBSTACLE_WIDTH, OBSTACLE_HEIGHT))
+    obstacle_images.append(obstacle_image)
 
-    def draw(self):
-        pygame.draw.rect(screen, WHITE, self.rect)
+background_image = pygame.image.load("background.jpg")
+background_image = pygame.transform.scale(background_image, (SCREEN_WIDTH, SCREEN_HEIGHT))
 
-# Create paddles and ball
-player_paddle = Paddle(50, SCREEN_HEIGHT // 2 - PADDLE_HEIGHT // 2)
-ai_paddle = Paddle(SCREEN_WIDTH - PADDLE_WIDTH - 50, SCREEN_HEIGHT // 2 - PADDLE_HEIGHT // 2)
-ball = Ball(SCREEN_WIDTH // 2 - BALL_SIZE // 2, SCREEN_HEIGHT // 2 - BALL_SIZE // 2)
+# Initialize player position
+player_x = (SCREEN_WIDTH - PLAYER_SIZE) // 2
+player_y = SCREEN_HEIGHT - PLAYER_SIZE - 120
 
-player_score = 0
-ai_score = 0
-font = pygame.font.Font(None, 36)
+# Initialize obstacles and items
+obstacles = []
+items = []
 
-# Main game loop
-while True:
+# Initialize the number of collected items
+collected_items = 0
+
+# Game loop
+running = True
+clock = pygame.time.Clock()
+
+while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            pygame.quit()
-            sys.exit()
+            running = False
 
+    # Get the state of all keys
     keys = pygame.key.get_pressed()
-    if keys[pygame.K_w] and player_paddle.rect.top > 0:
-        player_paddle.rect.y -= PADDLE_SPEED
-    if keys[pygame.K_s] and player_paddle.rect.bottom < SCREEN_HEIGHT:
-        player_paddle.rect.y += PADDLE_SPEED
 
-    # AI opponent
-    if ball.vx > 0:
-        if ai_paddle.rect.centery < ball.rect.centery:
-            ai_paddle.rect.y += PADDLE_SPEED
-        elif ai_paddle.rect.centery > ball.rect.centery:
-            ai_paddle.rect.y -= PADDLE_SPEED
+    # Update player position based on key presses
+    if keys[pygame.K_LEFT]:
+        player_x -= PLAYER_SPEED
+    if keys[pygame.K_RIGHT]:
+        player_x += PLAYER_SPEED
 
-    # Update ball position
-    ball.rect.x += ball.vx
-    ball.rect.y += ball.vy
+    # Spawn new obstacles and items
+    if random.randint(1, 100) < 5:
+        obstacle_x = random.randint(0, SCREEN_WIDTH - OBSTACLE_WIDTH)
+        obstacle_type = random.choice(obstacle_images)
+        obstacles.append([obstacle_x, -OBSTACLE_HEIGHT, obstacle_type])
+    if random.randint(1, 100) < 2:
+        item_x = random.randint(0, SCREEN_WIDTH - ITEM_RADIUS * 2)
+        items.append([item_x, -ITEM_RADIUS, food_image])
 
-    # Ball collision with walls
-    if ball.rect.top <= 0 or ball.rect.bottom >= SCREEN_HEIGHT:
-        ball.vy = -ball.vy
+    # Update obstacle and item positions
+    for obstacle in obstacles:
+        obstacle[1] += 5
+    for item in items:
+        item[1] += 5
 
-    # Ball collision with paddles
-    if ball.rect.colliderect(player_paddle.rect) or ball.rect.colliderect(ai_paddle.rect):
-        ball.vx = -ball.vx
+    # Check for collisions with obstacles and items
+    player_rect = pygame.Rect(player_x, player_y, PLAYER_SIZE, PLAYER_SIZE)
+    for obstacle in obstacles:
+        obstacle_rect = pygame.Rect(obstacle[0], obstacle[1], OBSTACLE_WIDTH, OBSTACLE_HEIGHT)
+        if player_rect.colliderect(obstacle_rect):
+            print("Game Over! You hit an obstacle.")
+            running = False
+    for item in items:
+        item_rect = pygame.Rect(item[0], item[1], ITEM_RADIUS * 2, ITEM_RADIUS * 2)
+        if player_rect.colliderect(item_rect):
+            items.remove(item)
+            collected_items += 1
+            print("Item collected! Total items:", collected_items)
 
-    # Ball out of bounds
-    if ball.rect.left <= 0:
-        ai_score += 1
-        ball.rect.x = SCREEN_WIDTH // 2 - BALL_SIZE // 2
-        ball.rect.y = SCREEN_HEIGHT // 2 - BALL_SIZE // 2
-        ball.vx = BALL_SPEED[0]
-        ball.vy = BALL_SPEED[1]
+    # Clear the screen and draw the background
+    screen.blit(background_image, (0, 0))
 
-    if ball.rect.right >= SCREEN_WIDTH:
-        player_score += 1
-        ball.rect.x = SCREEN_WIDTH // 2 - BALL_SIZE // 2
-        ball.rect.y = SCREEN_HEIGHT // 2 - BALL_SIZE // 2
-        ball.vx = -BALL_SPEED[0]
-        ball.vy = BALL_SPEED[1]
+    # Draw the player
+    screen.blit(player_image, (player_x, player_y))
 
-    # Clear the screen
-    screen.fill(BLACK)
+    # Draw obstacles and items
+    for obstacle in obstacles:
+        screen.blit(obstacle[2], (obstacle[0], obstacle[1]))
+    for item in items:
+        screen.blit(item[2], (item[0], item[1]))
 
-    # Draw paddles and ball
-    player_paddle.draw()
-    ai_paddle.draw()
-    ball.draw()
+    # Display collected items
+    font = pygame.font.Font(None, 36)
+    text = font.render("Points: " + str(collected_items), True, WHITE)
+    screen.blit(text, (10, 10))
 
-    # Draw the score
-    score_text = font.render(f"{player_score} - {ai_score}", True, WHITE)
-    screen.blit(score_text, (SCREEN_WIDTH // 2 - score_text.get_width() // 2, 10))
-
-    # Update the display
+    # Update the screen
     pygame.display.flip()
-    pygame.time.Clock().tick(60)  # Limit frame rate to 60 FPS
+
+    # Cap the frame rate
+    clock.tick(30)
+
+# Quit Pygame
+pygame.quit()
+sys.exit()
