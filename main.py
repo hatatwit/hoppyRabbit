@@ -14,6 +14,7 @@ OBSTACLE_WIDTH = 50
 OBSTACLE_HEIGHT = 40
 ITEM_RADIUS = 15
 WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
 
 # Initialize the screen
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -55,6 +56,51 @@ collected_items = 0
 running = True
 clock = pygame.time.Clock()
 
+# Game over function
+def game_over_screen(collected_items):
+    screen.fill((0, 0, 0))  # Fill screen with black
+
+    font_large = pygame.font.Font(None, 64)
+    text_game_over = font_large.render("Game Over", True, WHITE)
+    text_points = font_large.render("Points: " + str(collected_items), True, WHITE)
+
+    font_small = pygame.font.Font(None, 36)
+    text_restart = font_small.render("Restart", True, BLACK)
+    text_quit = font_small.render("Quit", True, BLACK)
+
+    # Display game over text and points
+    screen.blit(text_game_over, (SCREEN_WIDTH // 2 - text_game_over.get_width() // 2, 200))
+    screen.blit(text_points, (SCREEN_WIDTH // 2 - text_points.get_width() // 2, 300))
+
+    # Draw restart and quit buttons
+    restart_rect = pygame.Rect(300, 400, 200, 50)
+    quit_rect = pygame.Rect(300, 500, 200, 50)
+    pygame.draw.rect(screen, WHITE, restart_rect)
+    pygame.draw.rect(screen, WHITE, quit_rect)
+    screen.blit(text_restart, (350, 410))
+    screen.blit(text_quit, (370, 510))
+
+    pygame.display.flip()
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_pos = pygame.mouse.get_pos()
+
+                # Check if restart button clicked
+                if restart_rect.collidepoint(mouse_pos):
+                    return True
+
+                # Check if quit button clicked
+                if quit_rect.collidepoint(mouse_pos):
+                    pygame.quit()
+                    sys.exit()
+
+
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -92,6 +138,17 @@ while running:
         if player_rect.colliderect(obstacle_rect):
             print("Game Over! You hit an obstacle.")
             running = False
+            # Display game over screen and get restart choice
+            restart = game_over_screen(collected_items)
+            if restart:
+                # Reset game state
+                obstacles = []
+                items = []
+                collected_items = 0
+                player_x = (SCREEN_WIDTH - PLAYER_SIZE) // 2
+                player_y = SCREEN_HEIGHT - PLAYER_SIZE - 120
+                running = True
+
     for item in items:
         item_rect = pygame.Rect(item[0], item[1], ITEM_RADIUS * 2, ITEM_RADIUS * 2)
         if player_rect.colliderect(item_rect):
